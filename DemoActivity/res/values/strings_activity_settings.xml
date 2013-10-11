@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_activity_settings">Settings</string>
+    <string name="pref_server_url_title">Server URL</string>
+    <string name="pref_server_url_summary">Set the server URL for your GSN installation</string>
+    <string name="pref_server_title">GSN Server</string>
+    <string name="pref_server_port_title">Server port</string>
+    <string name="pref_server_port_summary">Set the port your GSN server is listening on</string>
+</resources>
