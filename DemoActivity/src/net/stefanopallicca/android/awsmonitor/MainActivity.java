@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.gcm.demo.app;
+package net.stefanopallicca.android.awsmonitor;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.stefanopallicca.android.awsmonitor.R;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -66,7 +67,7 @@ import org.json.JSONTokener;
 /**
  * Main UI for the demo app.
  */
-public class DemoActivity extends Activity{
+public class MainActivity extends Activity{
 
     public static final String EXTRA_MESSAGE = "message";
     public static final String PROPERTY_REG_ID = "registration_id";
@@ -157,22 +158,22 @@ public class DemoActivity extends Activity{
      *         registration ID.
      */
     private String getRegistrationId(Context context) {
-        final SharedPreferences prefs = getGcmPreferences(context);
-        String registrationId = prefs.getString(PROPERTY_REG_ID, "");
-        if (registrationId.isEmpty()) {
-            Log.i(TAG, "Registration not found.");
-            return "";
-        }
-        // Check if app was updated; if so, it must clear the registration ID
-        // since the existing regID is not guaranteed to work with the new
-        // app version.
-        int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
-        int currentVersion = getAppVersion(context);
-        if (registeredVersion != currentVersion) {
-            Log.i(TAG, "App version changed.");
-            return "";
-        }
-        return registrationId;
+    	final SharedPreferences prefs = getGcmPreferences(context);
+      String registrationId = prefs.getString(PROPERTY_REG_ID, "");
+      if (registrationId.isEmpty()) {
+      	Log.i(TAG, "Registration not found.");
+          return "";
+      }
+      // Check if app was updated; if so, it must clear the registration ID
+      // since the existing regID is not guaranteed to work with the new
+      // app version.
+      int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
+      int currentVersion = getAppVersion(context);
+      if (registeredVersion != currentVersion) {
+      	Log.i(TAG, "App version changed.");
+      	return "";
+      }
+      return registrationId;
     }
 
     /**
@@ -218,7 +219,7 @@ public class DemoActivity extends Activity{
 					//mDisplay.append(msg + "\n");
 					if(msg == "ok"){
   		    	Context context = getApplicationContext();
-  		    	CharSequence text = getString(R.string.device_registered) + " " + DemoActivity.this._sharedPref.getString("pref_server_url", "")+":"+DemoActivity.this._sharedPref.getString("pref_server_port", "");
+  		    	CharSequence text = getString(R.string.device_registered) + " " + MainActivity.this._sharedPref.getString("pref_server_url", "")+":"+MainActivity.this._sharedPref.getString("pref_server_port", "");
   		    	int duration = Toast.LENGTH_LONG;
 
   		    	Toast toast = Toast.makeText(context, text, duration);
@@ -226,7 +227,7 @@ public class DemoActivity extends Activity{
 					}
 					else{
   		    	Context context = getApplicationContext();
-  		    	CharSequence text = getString(R.string.error_connecting) + " " + DemoActivity.this._sharedPref.getString("pref_server_url", "")+":"+DemoActivity.this._sharedPref.getString("pref_server_port", "");
+  		    	CharSequence text = getString(R.string.error_connecting) + " " + MainActivity.this._sharedPref.getString("pref_server_url", "")+":"+MainActivity.this._sharedPref.getString("pref_server_port", "");
   		    	int duration = Toast.LENGTH_LONG;
 
   		    	Toast toast = Toast.makeText(context, text, duration);
@@ -292,7 +293,7 @@ public class DemoActivity extends Activity{
     private SharedPreferences getGcmPreferences(Context context) {
         // This sample app persists the registration ID in shared preferences, but
         // how you store the regID in your app is up to you.
-        return getSharedPreferences(DemoActivity.class.getSimpleName(),
+        return getSharedPreferences(MainActivity.class.getSimpleName(),
                 Context.MODE_PRIVATE);
     }
     
@@ -441,10 +442,10 @@ public class DemoActivity extends Activity{
 						try {
 							regOk = sendRegistrationIdToBackend(regid);
 							if(regOk){
-		  		    	text = getString(R.string.device_registered) + " " + DemoActivity.this._sharedPref.getString("pref_server_url", "")+":"+DemoActivity.this._sharedPref.getString("pref_server_port", "");
+		  		    	text = getString(R.string.device_registered) + " " + MainActivity.this._sharedPref.getString("pref_server_url", "")+":"+MainActivity.this._sharedPref.getString("pref_server_port", "");
 							}
 							else{
-		  		    	text = getString(R.string.error_connecting) + " " + DemoActivity.this._sharedPref.getString("pref_server_url", "")+":"+DemoActivity.this._sharedPref.getString("pref_server_port", "");
+		  		    	text = getString(R.string.error_connecting) + " " + MainActivity.this._sharedPref.getString("pref_server_url", "")+":"+MainActivity.this._sharedPref.getString("pref_server_port", "");
 							}
 						} catch (HttpException e) {
 								text = getString(R.string.service_not_found);

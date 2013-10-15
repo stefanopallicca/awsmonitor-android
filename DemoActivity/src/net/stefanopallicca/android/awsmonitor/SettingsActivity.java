@@ -1,4 +1,4 @@
-package com.google.android.gcm.demo.app;
+package net.stefanopallicca.android.awsmonitor;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import net.stefanopallicca.android.awsmonitor.R;
 
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 	

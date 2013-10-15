@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.android.gcm.demo.app;
+package net.stefanopallicca.android.awsmonitor;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import net.stefanopallicca.android.awsmonitor.R;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -97,7 +98,7 @@ public class GcmIntentService extends IntentService {
                 this.getSystemService(Context.NOTIFICATION_SERVICE);
 
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, DemoActivity.class), 0);
+                new Intent(this, MainActivity.class), 0);
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
