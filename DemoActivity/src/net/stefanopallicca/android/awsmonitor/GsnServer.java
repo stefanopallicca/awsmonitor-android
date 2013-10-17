@@ -3,6 +3,7 @@ package net.stefanopallicca.android.awsmonitor;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -53,18 +54,51 @@ public class GsnServer {
 		return this.name;
 	}
 	
+	/**
+	 * Gets a list of names of the virtual sensors having at least one field defined
+	 * 
+	 * @return ArrayList<String> containing VS names. Empty array if no VS present 
+	 */
+	public ArrayList<String> getVirtualSensorWithFieldsName(){
+		ArrayList<String> ret = new ArrayList<String>();
+		for(int i = 0; i < this.virtualSensors.size(); i++){
+			if(this.virtualSensors.get(i).fields.size() > 0)
+				ret.add(this.virtualSensors.get(i).getName());
+		}
+		return ret;
+	}
+	
+	public Map<String, String> getVirtualSensorWithFieldsNameAndDesc(){
+		Map<String, String> ret = null;
+		for(int i = 0; i < this.virtualSensors.size(); i++){
+			if(this.virtualSensors.get(i).fields.size() > 0)
+				ret.put(this.virtualSensors.get(i).getName(), this.virtualSensors.get(i).getDescription());
+		}
+		return ret;
+	}
+	
+	/**
+	 * @author Ste
+	 *
+	 */
 	public class VirtualSensor {
 		private String name = "";
+		private String description = "";
 		public ArrayList<VSField> fields = new ArrayList<VSField>();
 		
 		public VirtualSensor(Element e){
 			this.name = e.getAttribute("name");
+			this.description = e.getAttribute("description");
 			NodeList nodes = e.getElementsByTagName("field");
 			for (int i = 0; i < nodes.getLength(); i++) {
 				this.fields.add(new VSField((Element) nodes.item(i)));
 			}
 		}
 		
+		public String getDescription() {
+			return description;
+		}
+
 		public String getName() {
 			return name;
 		}

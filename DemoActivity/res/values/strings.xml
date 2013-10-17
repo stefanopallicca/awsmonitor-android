@@ -16,7 +16,7 @@
 -->
 <resources>
 
-    <string name="app_name">GCM Demo</string>
+    <string name="app_name">GSN AWS Monitor</string>
     <string name="send">Send</string>
     <string name="clear">Clear</string>
     <string name="menu_settings">Settings</string>

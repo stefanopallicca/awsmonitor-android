@@ -21,6 +21,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import android.R.bool;
 import android.app.Activity;
+import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -33,6 +34,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,10 +43,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.stefanopallicca.android.awsmonitor.GsnServer.VirtualSensor;
 import net.stefanopallicca.android.awsmonitor.R;
+
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -67,7 +74,7 @@ import org.json.JSONTokener;
 /**
  * Main UI for the demo app.
  */
-public class MainActivity extends Activity{
+public class MainActivity extends ListActivity{
 
     public static final String EXTRA_MESSAGE = "message";
     public static final String PROPERTY_REG_ID = "registration_id";
@@ -97,6 +104,7 @@ public class MainActivity extends Activity{
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     	this._sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+    	  		
     	if(_sharedPref.getString("pref_server_url", "") == ""){
     		Intent intent = new Intent(this, SettingsActivity.class);
 				this.startActivityForResult(intent, 1);
@@ -361,7 +369,7 @@ public class MainActivity extends Activity{
     	
     public void launchMainApp(){
       setContentView(R.layout.main);
-      mDisplay = (TextView) findViewById(R.id.display);
+      //mDisplay = (TextView) findViewById(R.id.display);
       
       context = getApplicationContext();
 
@@ -382,11 +390,26 @@ public class MainActivity extends Activity{
           	GsnServer server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
           	server.getSummary();
           	//Log.i(TAG, server.getName());
-          	mDisplay.append(getString(R.string.connected_to)+": "+server.getName());
-          	mDisplay.append("\n"+server.virtualSensors.get(1).getName());
+          	//mDisplay.append(getString(R.string.connected_to)+": "+server.getName());
+          	//mDisplay.append("\n"+server.virtualSensors.get(1).getName());
+            setContentView(R.layout.main);
+            //ListView listView = (ListView)findViewById(R.id.list);
+            ListView listView = getListView();
+            mDisplay = (TextView) findViewById(R.id.main_header);
+            mDisplay.append(server.getName());
+            //String [] array = {"Antonio","Giovanni","Michele","Giuseppe", "Leonardo", "Alessandro"};
+            //Map<String, String> virtual_sensors = server.getVirtualSensorWithFieldsNameAndDesc();
+            List<VirtualSensor> list = new LinkedList<VirtualSensor>();
+            for(int i = 0; i < server.virtualSensors.size(); i++){
+            	if(server.virtualSensors.get(i).fields.size() > 0)
+            		list.add(server.virtualSensors.get(i));
+            }
+            VirtualSensorListAdapter adapter = new VirtualSensorListAdapter(this, R.layout.row, list);
+            listView.setAdapter(adapter);
+
           }
           else{
-          	mDisplay.append("This device is not ready to receive notifications from a GSN server. Go to settings to configure a GSN server");
+          	//mDisplay.append("This device is not ready to receive notifications from a GSN server. Go to settings to configure a GSN server");
           }
       } else {
           Log.i(TAG, "No valid Google Play Services APK found.");
