@@ -378,7 +378,12 @@ public class MainActivity extends Activity{
           }
           if(regid != "" && checkDeviceRegistration()){
           	Log.i(TAG, "This device has been registered to GSN server");
-          	mDisplay.append("Device ready to receive notifications from GSN server " + _sharedPref.getString("pref_server_url", ""));
+          	//mDisplay.append("Device ready to receive notifications from GSN server " + _sharedPref.getString("pref_server_url", ""));
+          	GsnServer server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
+          	server.getSummary();
+          	//Log.i(TAG, server.getName());
+          	mDisplay.append(getString(R.string.connected_to)+": "+server.getName());
+          	mDisplay.append("\n"+server.virtualSensors.get(1).getName());
           }
           else{
           	mDisplay.append("This device is not ready to receive notifications from a GSN server. Go to settings to configure a GSN server");

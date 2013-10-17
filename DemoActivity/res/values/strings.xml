@@ -23,5 +23,6 @@
     <string name="error_connecting">Error connecting to host</string>
     <string name="device_registered">Device registered to host</string>
     <string name="service_not_found">This GSN server does not support this app yet.</string>
+    <string name="connected_to">Connected to</string>
 
 </resources>
