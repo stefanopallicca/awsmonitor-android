@@ -12,7 +12,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-public class GsnServer {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class GsnServer implements Parcelable {
 	private String url = "";
 	private int port = 22001;
 	
@@ -24,6 +27,14 @@ public class GsnServer {
 		this.port = port;
 	}
 	
+	public GsnServer(Parcel in) {
+		url = in.readString();
+		port = in.readInt();
+		name = in.readString();
+		virtualSensors = new ArrayList<VirtualSensor>();
+    in.readList(virtualSensors, getClass().getClassLoader());
+	}
+
 	public void getSummary(){
 		try {
 			URL url = new URL("http://"+this.url+":"+this.port+"/gsn");
@@ -38,11 +49,7 @@ public class GsnServer {
 
 			NodeList nodes = doc.getElementsByTagName("virtual-sensor");
 			for (int i = 0; i < nodes.getLength(); i++) {
-				this.virtualSensors.add(new VirtualSensor((Element) nodes.item(i)));
-				/*Element element = (Element) nodes.item(i);
-				NodeList title = element.getElementsByTagName();
-				Element line = (Element) title.item(0);
-				phoneNumberList.add(line.getTextContent());*/
+				this.virtualSensors.add(new VirtualSensor((Element) nodes.item(i), i));
 			}
 		}
 		catch (Exception e) {
@@ -81,20 +88,30 @@ public class GsnServer {
 	 * @author Ste
 	 *
 	 */
-	public class VirtualSensor {
+	public static class VirtualSensor implements Parcelable{
 		private String name = "";
 		private String description = "";
-		public ArrayList<VSField> fields = new ArrayList<VSField>();
+		private int index = -1;
+		protected ArrayList<VSField> fields = new ArrayList<VSField>();
 		
-		public VirtualSensor(Element e){
-			this.name = e.getAttribute("name");
-			this.description = e.getAttribute("description");
+		public VirtualSensor(Element e, int index){
+			name = e.getAttribute("name");
+			description = e.getAttribute("description");
+			this.index = index;
 			NodeList nodes = e.getElementsByTagName("field");
 			for (int i = 0; i < nodes.getLength(); i++) {
 				this.fields.add(new VSField((Element) nodes.item(i)));
 			}
 		}
 		
+		public VirtualSensor(Parcel in) {
+			name = in.readString();
+			description = in.readString();
+			index = in.readInt();
+			fields = new ArrayList<VSField>();
+			in.readTypedList(fields, VSField.CREATOR);
+		}
+
 		public String getDescription() {
 			return description;
 		}
@@ -107,13 +124,21 @@ public class GsnServer {
 			return fields;
 		}
 		
-		public class VSField{
+		public static class VSField implements Parcelable{
 			private String name = "";
 			private String type = "";
+			private String description = "";
 			
 			public VSField(Element e){
-				this.name = e.getAttribute("name");
-				this.type = e.getAttribute("type");
+				name = e.getAttribute("name");
+				type = e.getAttribute("type");
+				description = e.getAttribute("description");
+			}
+
+			public VSField(Parcel in) {
+				name = in.readString();
+				type = in.readString();
+				description = in.readString();
 			}
 
 			public String getName() {
@@ -123,9 +148,105 @@ public class GsnServer {
 			public String getType() {
 				return type;
 			}
+
+			public String getDescription() {
+				return description;
+			}
+
+			@Override
+			public int describeContents() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+
+			@Override
+			public void writeToParcel(Parcel dest, int flags) {
+				dest.writeString(name);
+				dest.writeString(type);
+				dest.writeString(description);
+			}
+		
+		  // this is used to regenerate your object. All Parcelables must have a CREATOR that implements these two methods
+		  public static final Parcelable.Creator<VSField> CREATOR = new Parcelable.Creator<VSField>() {
+		  	public VSField createFromParcel(Parcel in) {
+		  		return new VSField(in);
+		  	}
+
+		  	public VSField[] newArray(int size) {
+		  		return new VSField[size];
+		  	}
+		  };
 			
+		} // End of VSField class
+
+		@Override
+		public int describeContents() {
+			// TODO Auto-generated method stub
+			return 0;
 		}
+
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			dest.writeString(name);
+			dest.writeString(description);
+			dest.writeInt(index);
+			dest.writeTypedList(fields);
+		}
+		
+	  // this is used to regenerate your object. All Parcelables must have a CREATOR that implements these two methods
+	  public static final Parcelable.Creator<VirtualSensor> CREATOR = new Parcelable.Creator<VirtualSensor>() {
+	  	public VirtualSensor createFromParcel(Parcel in) {
+	  		return new VirtualSensor(in);
+	  	}
+
+	  	public VirtualSensor[] newArray(int size) {
+	  		return new VirtualSensor[size];
+	  	}
+	  };
+
+		public int getNumFields() {
+			return fields.size();
+		}
+
+		public int getIndex() {
+			return index;
+		}
+	} // End of VirtualSensor class
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(url);
+		dest.writeInt(port);
+		dest.writeString(name);
+		dest.writeList(virtualSensors);
+	}
+	
+  // this is used to regenerate your object. All Parcelables must have a CREATOR that implements these two methods
+  public static final Parcelable.Creator<GsnServer> CREATOR = new Parcelable.Creator<GsnServer>() {
+  	public GsnServer createFromParcel(Parcel in) {
+  		return new GsnServer(in);
+  	}
+
+  	public GsnServer[] newArray(int size) {
+  		return new GsnServer[size];
+  	}
+  };
+
+	public int getVSIndexByName(String name) {
+		VirtualSensor vs = null;
+		for(int i = 0; i < virtualSensors.size(); i++){
+			vs = virtualSensors.get(i);
+			if(vs.getName() == name)
+				return vs.getIndex(); 
+		}
+		return -1;
 	}
 	
 	
-}
+} // End of GsnServer class

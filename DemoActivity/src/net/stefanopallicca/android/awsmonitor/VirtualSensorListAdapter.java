@@ -19,7 +19,7 @@ public class VirtualSensorListAdapter extends ArrayAdapter<VirtualSensor> {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		convertView = inflater.inflate(R.layout.row, null);
+		convertView = inflater.inflate(R.layout.vs_row, null);
     TextView vs_name = (TextView)convertView.findViewById(R.id.vs_row_name);
     TextView vs_desc = (TextView)convertView.findViewById(R.id.vs_row_desc);
 		VirtualSensor vs = getItem(position);

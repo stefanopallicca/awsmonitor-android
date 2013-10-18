@@ -82,7 +82,9 @@ public class MainActivity extends ListActivity{
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     protected SharedPreferences _sharedPref;
     //private static final String GSN_URL = "http://stefanopallicca.net:22001";
-
+    
+    
+    private GsnServer server = null;
     /**
      * Project number in Google console
      */
@@ -387,24 +389,18 @@ public class MainActivity extends ListActivity{
           if(regid != "" && checkDeviceRegistration()){
           	Log.i(TAG, "This device has been registered to GSN server");
           	//mDisplay.append("Device ready to receive notifications from GSN server " + _sharedPref.getString("pref_server_url", ""));
-          	GsnServer server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
+          	server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
           	server.getSummary();
-          	//Log.i(TAG, server.getName());
-          	//mDisplay.append(getString(R.string.connected_to)+": "+server.getName());
-          	//mDisplay.append("\n"+server.virtualSensors.get(1).getName());
             setContentView(R.layout.main);
-            //ListView listView = (ListView)findViewById(R.id.list);
             ListView listView = getListView();
             mDisplay = (TextView) findViewById(R.id.main_header);
             mDisplay.append(server.getName());
-            //String [] array = {"Antonio","Giovanni","Michele","Giuseppe", "Leonardo", "Alessandro"};
-            //Map<String, String> virtual_sensors = server.getVirtualSensorWithFieldsNameAndDesc();
             List<VirtualSensor> list = new LinkedList<VirtualSensor>();
             for(int i = 0; i < server.virtualSensors.size(); i++){
-            	if(server.virtualSensors.get(i).fields.size() > 0)
+            	if(server.virtualSensors.get(i).getNumFields() > 0)
             		list.add(server.virtualSensors.get(i));
             }
-            VirtualSensorListAdapter adapter = new VirtualSensorListAdapter(this, R.layout.row, list);
+            VirtualSensorListAdapter adapter = new VirtualSensorListAdapter(this, R.layout.vs_row, list);
             listView.setAdapter(adapter);
 
           }
@@ -491,4 +487,14 @@ public class MainActivity extends ListActivity{
 			  }
 			}
     }//onActivityResult
+		
+		@Override  
+		protected void onListItemClick(ListView l, View v, int pos, long id) {  
+			super.onListItemClick(l, v, pos, id);
+			VirtualSensor vs = (VirtualSensor) getListView().getItemAtPosition(pos);
+			Intent i = new Intent(this, VirtualSensorActivity.class);
+			i.putExtra("ServerParcel", server);
+			i.putExtra("vs_index", server.getVSIndexByName(vs.getName()));
+			startActivity(i);
+		}  
 }

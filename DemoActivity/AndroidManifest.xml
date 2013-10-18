@@ -63,11 +63,18 @@
             android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        
+        <activity
+	        android:name="net.stefanopallicca.android.awsmonitor.VirtualSensorActivity"
+	        android:label=""
+	        android:parentActivityName="net.stefanopallicca.android.awsmonitor.MainActivity" >
+        	<meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="net.stefanopallicca.android.awsmonitor.MainActivity" />
+        </activity>
         <!--
           WakefulBroadcastReceiver that will receive intents from GCM
           services and hand them to the custom IntentService.
