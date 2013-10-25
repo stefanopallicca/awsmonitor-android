@@ -1,26 +1,46 @@
 package net.stefanopallicca.android.awsmonitor;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 public class GsnServer implements Parcelable {
 	private String url = "";
 	private int port = 22001;
 	
 	private String name = "";
-	public ArrayList<VirtualSensor> virtualSensors = new ArrayList<VirtualSensor>();;
+	public ArrayList<VirtualSensor> virtualSensors = new ArrayList<VirtualSensor>();
+	
+	public static final String TAG = "GsnServer";
+	
+	public enum Event {ABOVE, BELOW};
 	
 	public GsnServer(String url, int port){
 		this.url = url;
@@ -100,7 +120,7 @@ public class GsnServer implements Parcelable {
 			this.index = index;
 			NodeList nodes = e.getElementsByTagName("field");
 			for (int i = 0; i < nodes.getLength(); i++) {
-				this.fields.add(new VSField((Element) nodes.item(i)));
+				this.fields.add(new VSField((Element) nodes.item(i), i));
 			}
 		}
 		
@@ -128,16 +148,19 @@ public class GsnServer implements Parcelable {
 			private String name = "";
 			private String type = "";
 			private String description = "";
+			private int index = -1;
 			
-			public VSField(Element e){
+			public VSField(Element e, int index){
 				name = e.getAttribute("name");
 				type = e.getAttribute("type");
 				description = e.getAttribute("description");
+				this.index = index;
 			}
 
 			public VSField(Parcel in) {
 				name = in.readString();
 				type = in.readString();
+				index = in.readInt();
 				description = in.readString();
 			}
 
@@ -163,6 +186,7 @@ public class GsnServer implements Parcelable {
 			public void writeToParcel(Parcel dest, int flags) {
 				dest.writeString(name);
 				dest.writeString(type);
+				dest.writeInt(index);
 				dest.writeString(description);
 			}
 		
@@ -176,6 +200,10 @@ public class GsnServer implements Parcelable {
 		  		return new VSField[size];
 		  	}
 		  };
+
+			public int getIndex() {
+				return index;
+			}
 			
 		} // End of VSField class
 
@@ -210,6 +238,16 @@ public class GsnServer implements Parcelable {
 
 		public int getIndex() {
 			return index;
+		}
+
+		public int getFieldIndexByName(String name) {
+			VSField field = null;
+			for(int i = 0; i < fields.size(); i++){
+				field = fields.get(i);
+				if(field.getName() == name)
+					return field.getIndex(); 
+			}
+			return -1;
 		}
 	} // End of VirtualSensor class
 
@@ -246,6 +284,41 @@ public class GsnServer implements Parcelable {
 				return vs.getIndex(); 
 		}
 		return -1;
+	}
+	
+	public boolean registerToNotification(String regid, String vs_name, String field_name, double threshold, Event event) throws HttpException{
+  	HttpParams httpParameters = new BasicHttpParams();
+  	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+  	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
+  	
+    // Create a new HttpClient and Post Header
+    HttpClient httpclient = new DefaultHttpClient(httpParameters);
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/RegisterDevice");
+
+    try {
+        // Add your data
+        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+        nameValuePairs.add(new BasicNameValuePair("regId", regid));
+        nameValuePairs.add(new BasicNameValuePair("vs_name", vs_name));
+        nameValuePairs.add(new BasicNameValuePair("field", field_name));
+        nameValuePairs.add(new BasicNameValuePair("threshold", Double.valueOf(threshold).toString()));
+        nameValuePairs.add(new BasicNameValuePair("event", event.toString()));
+        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+        // Execute HTTP Post Request
+        HttpResponse response = httpclient.execute(httppost);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if(statusCode >= 400)
+        	throw new HttpException(String.valueOf(statusCode));
+    } catch (ClientProtocolException e) {
+    	 Log.e(TAG, e.toString());
+    } catch (ConnectTimeoutException e){
+    		throw new HttpException("2200");
+    } catch (IOException e) {
+    	Log.e(TAG, e.toString());
+    	return false;
+    }
+    return true;
 	}
 	
 	

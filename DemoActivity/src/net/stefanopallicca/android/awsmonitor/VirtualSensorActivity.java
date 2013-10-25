@@ -10,6 +10,7 @@ import net.stefanopallicca.android.awsmonitor.GsnServer.VirtualSensor.VSField;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ListView;
 
 public class VirtualSensorActivity extends ListActivity {
@@ -38,5 +39,16 @@ public class VirtualSensorActivity extends ListActivity {
   	FieldListAdapter fl_adapter = new FieldListAdapter(this, R.layout.field_row, list);
   	ListView listView = getListView();
   	listView.setAdapter(fl_adapter);
+	}
+	
+	@Override  
+	protected void onListItemClick(ListView l, View v, int pos, long id) {  
+		super.onListItemClick(l, v, pos, id);
+		VSField field = (VSField) getListView().getItemAtPosition(pos);
+		Intent i = new Intent(this, VSFieldActivity.class);
+		i.putExtra("ServerParcel", server);
+		i.putExtra("vs_index", vs.getIndex());
+		i.putExtra("field_index", vs.getFieldIndexByName(field.getName()));
+		startActivity(i);
 	}
 }
