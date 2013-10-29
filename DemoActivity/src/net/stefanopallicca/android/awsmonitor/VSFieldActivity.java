@@ -8,6 +8,7 @@ import net.stefanopallicca.android.awsmonitor.GsnServer.VirtualSensor.VSField;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ListActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,9 +29,15 @@ public class VSFieldActivity extends Activity {
 	private VirtualSensor vs = null;
 	private VSField field = null;
 	
+	private NotificationsDatasource datasource;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		datasource = new NotificationsDatasource(this);
+    datasource.open();
+    
 		Intent intent = getIntent();
   	server = intent.getParcelableExtra("ServerParcel");
   	int vs_index = intent.getIntExtra("vs_index", -1);
@@ -50,6 +57,18 @@ public class VSFieldActivity extends Activity {
 		// Apply the adapter to the spinner
 		spinner.setAdapter(adapter);
 		onCheckboxClicked(findViewById(R.id.checkbox_notification));
+		
+		VSFNotification notif = datasource.getNotification(vs.getName(), field.getName());
+		if(notif != null){
+			Log.i("INFO", notif.getThreshold().toString());
+			((EditText) findViewById(R.id.text_threshold)).setText(notif.getThreshold().toString());
+			Event event = notif.getEvent();
+			spinner.setSelection(event.ordinal());
+			if(notif.getActive()){
+				((CheckBox)findViewById(R.id.checkbox_notification)).setChecked(false);
+				findViewById(R.id.checkbox_notification).performClick();
+			}
+		}
 	}
 
 	/**
@@ -100,7 +119,23 @@ public class VSFieldActivity extends Activity {
 	
 	public void saveSetting(View view){
 		try{
-			server.registerToNotification(getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE).getString(MainActivity.PROPERTY_REG_ID, ""), vs.getName(), field.getName(), Double.valueOf(((EditText)findViewById(R.id.text_threshold)).getText().toString()), Event.valueOf(((Spinner)findViewById(R.id.filter_spinner)).getSelectedItem().toString().toUpperCase()));
+			Double threshold = Double.valueOf(((EditText)findViewById(R.id.text_threshold)).getText().toString());
+			Event event = Event.valueOf(((Spinner)findViewById(R.id.filter_spinner)).getSelectedItem().toString().toUpperCase());
+			/* TODO
+			 * add unregistration check if checkbox is unchecked and unregister from remote server
+			 */
+			boolean register_ok = server.registerToNotification(
+					getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE).getString(MainActivity.PROPERTY_REG_ID, ""), 
+					vs.getName(), field.getName(), 
+					threshold, event
+					);
+			
+			if(register_ok){
+				if(((CheckBox)findViewById(R.id.checkbox_notification)).isChecked())
+					datasource.addNotification(vs.getName(), field.getName(), threshold, event, true);
+				else
+					datasource.addNotification(vs.getName(), field.getName(), threshold, event, false);
+			}
 		} catch (HttpException e){
 			;
 		}

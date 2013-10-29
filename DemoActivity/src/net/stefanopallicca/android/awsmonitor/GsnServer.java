@@ -286,6 +286,17 @@ public class GsnServer implements Parcelable {
 		return -1;
 	}
 	
+	/**
+	 * Registers device to notification service on GSN server
+	 * 
+	 * @param regid GCM Registration ID of the device
+	 * @param vs_name Virtual Sensor name
+	 * @param field_name Field name (must be part of {@code vs_name})
+	 * @param threshold The threshold triggering the notification
+	 * @param event The event triggering the notification
+	 * @return true if registration successful
+	 * @throws HttpException
+	 */
 	public boolean registerToNotification(String regid, String vs_name, String field_name, double threshold, Event event) throws HttpException{
   	HttpParams httpParameters = new BasicHttpParams();
   	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
