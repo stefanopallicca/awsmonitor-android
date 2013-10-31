@@ -5,9 +5,11 @@ import org.apache.http.HttpException;
 import net.stefanopallicca.android.awsmonitor.GsnServer.Event;
 import net.stefanopallicca.android.awsmonitor.GsnServer.VirtualSensor;
 import net.stefanopallicca.android.awsmonitor.GsnServer.VirtualSensor.VSField;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,12 +31,16 @@ public class VSFieldActivity extends Activity {
 	private VirtualSensor vs = null;
 	private VSField field = null;
 	
+	private ProgressDialog pd;
+	private View v;
+	private Context context;
+	
 	private NotificationsDatasource datasource;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		context = this;
 		datasource = new NotificationsDatasource(this);
     datasource.open();
     
@@ -118,27 +124,56 @@ public class VSFieldActivity extends Activity {
 	}
 	
 	public void saveSetting(View view){
-		try{
-			Double threshold = Double.valueOf(((EditText)findViewById(R.id.text_threshold)).getText().toString());
-			Event event = Event.valueOf(((Spinner)findViewById(R.id.filter_spinner)).getSelectedItem().toString().toUpperCase());
-			/* TODO
-			 * add unregistration check if checkbox is unchecked and unregister from remote server
-			 */
-			boolean register_ok = server.registerToNotification(
-					getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE).getString(MainActivity.PROPERTY_REG_ID, ""), 
-					vs.getName(), field.getName(), 
-					threshold, event
-					);
-			
-			if(register_ok){
-				if(((CheckBox)findViewById(R.id.checkbox_notification)).isChecked())
-					datasource.addNotification(vs.getName(), field.getName(), threshold, event, true);
-				else
-					datasource.addNotification(vs.getName(), field.getName(), threshold, event, false);
+		//view.setEnabled(false);
+		AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected void onPreExecute() {
+				
+				pd = new ProgressDialog(context);
+				pd.setTitle("Processing...");
+				pd.setMessage("Please wait.");
+				pd.setCancelable(false);
+				pd.setIndeterminate(true);
+				pd.show();
 			}
-		} catch (HttpException e){
-			;
-		}
+			
+			@Override
+			protected Void doInBackground(Void... params) {
+				try{
+					Double threshold = Double.valueOf(((EditText)findViewById(R.id.text_threshold)).getText().toString());
+					Event event = Event.valueOf(((Spinner)findViewById(R.id.filter_spinner)).getSelectedItem().toString().toUpperCase());
+					if(((CheckBox)findViewById(R.id.checkbox_notification)).isChecked()){
+						boolean register_ok = server.registerToNotification(
+								getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE).getString(MainActivity.PROPERTY_REG_ID, ""), 
+								vs.getName(), field.getName(), 
+								threshold, event
+								);
+						
+						if(register_ok)
+							datasource.addNotification(vs.getName(), field.getName(), threshold, event, true);
+					}
+					else{
+						boolean remove_ok = server.unregisterNotification(
+								getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE).getString(MainActivity.PROPERTY_REG_ID, ""), 
+								vs.getName(), field.getName()
+								);
+						if(remove_ok)
+							datasource.addNotification(vs.getName(), field.getName(), threshold, event, false);
+					}
+				} catch (HttpException e){ }
+				return null;
+			}
+			
+			@Override
+			protected void onPostExecute(Void result) {
+				if (pd!=null) {
+					pd.dismiss();
+					//view.setEnabled(true);
+				}
+			}
+			
+		};
+		task.execute((Void[])null);
 	}
 
 }

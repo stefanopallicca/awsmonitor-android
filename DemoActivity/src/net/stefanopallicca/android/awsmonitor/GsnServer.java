@@ -331,6 +331,40 @@ public class GsnServer implements Parcelable {
     }
     return true;
 	}
+
+	public boolean unregisterNotification(String regid, String vs_name, String field_name) throws HttpException {
+  	HttpParams httpParameters = new BasicHttpParams();
+  	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+  	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
+  	
+    // Create a new HttpClient and Post Header
+    HttpClient httpclient = new DefaultHttpClient(httpParameters);
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/unregister");
+
+    try {
+        // Add your data
+        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+        nameValuePairs.add(new BasicNameValuePair("regId", regid));
+        nameValuePairs.add(new BasicNameValuePair("vs_name", vs_name));
+        nameValuePairs.add(new BasicNameValuePair("field_name", field_name));
+        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+        // Execute HTTP Post Request
+        HttpResponse response = httpclient.execute(httppost);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if(statusCode >= 400)
+        	throw new HttpException(String.valueOf(statusCode));
+    } catch (ClientProtocolException e) {
+    	Log.e(TAG, e.toString());
+    } catch (ConnectTimeoutException e){
+    	Log.e(TAG, e.toString());
+    	throw new HttpException("2200");
+    } catch (IOException e) {
+    	Log.e(TAG, e.toString());
+    	return false;
+    }
+    return true;
+	}
 	
 	
 } // End of GsnServer class
