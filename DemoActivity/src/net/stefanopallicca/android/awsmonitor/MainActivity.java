@@ -212,7 +212,7 @@ public class MainActivity extends ListActivity{
              * Send regid to GSN server
              */
             try {
-							if(sendRegistrationIdToBackend(regid))
+							if(server.sendRegistrationIdToBackend(regid))
 								msg = "ok";
 							else msg = "ko";
 						} catch (HttpException e) {
@@ -307,51 +307,6 @@ public class MainActivity extends ListActivity{
                 Context.MODE_PRIVATE);
     }
     
-    /**
-     * Sends the registration ID (received from GCM) to our app server, in order to register to
-     * the offered services
-     * 
-     * @param regid
-     * @return {@code true} upon successful registration, {@code false} otherwise
-     * @throws HttpException 
-     */
-    private boolean sendRegistrationIdToBackend(String regid) throws HttpException {
-    	Log.i(TAG, "Sending regid to GSN server"+this._sharedPref.getString("pref_server_url", ""));
-    	
-    	HttpParams httpParameters = new BasicHttpParams();
-    	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
-    	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
-    	
-	    // Create a new HttpClient and Post Header
-	    HttpClient httpclient = new DefaultHttpClient(httpParameters);
-	    HttpPost httppost = new HttpPost("http://"+this._sharedPref.getString("pref_server_url", "")+":"+this._sharedPref.getString("pref_server_port", "")+"/gcm/RegisterDevice");
-	
-	    try {
-	        // Add your data
-	        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-	        nameValuePairs.add(new BasicNameValuePair("regId", regid));
-	        nameValuePairs.add(new BasicNameValuePair("vs_name", "lamare_batt"));
-	        nameValuePairs.add(new BasicNameValuePair("field", "BATT_VOLT"));
-	        nameValuePairs.add(new BasicNameValuePair("threshold", "12.65"));
-	        nameValuePairs.add(new BasicNameValuePair("event", "BELOW"));
-	        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-	
-	        // Execute HTTP Post Request
-	        HttpResponse response = httpclient.execute(httppost);
-	        int statusCode = response.getStatusLine().getStatusCode();
-	        if(statusCode >= 400)
-	        	throw new HttpException(String.valueOf(statusCode));
-	    } catch (ClientProtocolException e) {
-	    	 Log.e(TAG, e.toString());
-	    } catch (ConnectTimeoutException e){
-	    		throw new HttpException("2200");
-	    } catch (IOException e) {
-	    	Log.e(TAG, e.toString());
-	    	return false;
-	    }
-	    return true;
-    }
-    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -379,17 +334,33 @@ public class MainActivity extends ListActivity{
       if (checkPlayServices()) {
           gcm = GoogleCloudMessaging.getInstance(this);
           regid = getRegistrationId(context);
+          server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
 
           if (regid.isEmpty()) {
               registerInBackground();
           }
           else {
-          	Log.i(TAG, "This version has already been registered to GCM");
+          	Log.i(TAG, "This version has already been registered to GCM "+regid);
           }
-          if(regid != "" && checkDeviceRegistration()){
+          boolean registered_to_gsnserver = false;
+          try{
+          	registered_to_gsnserver = server.checkDeviceRegistration(regid);
+          	if(!registered_to_gsnserver)
+          		registered_to_gsnserver = server.sendRegistrationIdToBackend(regid);
+          } catch (ConnectTimeoutException e){
+  		    	int duration = Toast.LENGTH_LONG;
+  		    	
+  		    	Toast toast = Toast.makeText(context, getString(R.string.connect_timeout)+" "+server.getURL()+":"+server.getPort(), duration);
+  		    	toast.show();
+          } catch (HttpException e) {
+  		    	int duration = Toast.LENGTH_LONG;
+  		    	
+  		    	Toast toast = Toast.makeText(context, getString(R.string.service_not_found), duration);
+  		    	toast.show();
+					}
+          if(!regid.isEmpty() && registered_to_gsnserver){
           	Log.i(TAG, "This device has been registered to GSN server");
           	//mDisplay.append("Device ready to receive notifications from GSN server " + _sharedPref.getString("pref_server_url", ""));
-          	server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
           	server.getSummary();
             setContentView(R.layout.main);
             ListView listView = getListView();
@@ -413,48 +384,8 @@ public class MainActivity extends ListActivity{
     }
     
     /**
-     * Checks against the GSN server to see whether this device is 
-     * already registered or not
-     * 
-     * @return {@code true} if the application {@code regid} has already been registered on the server, {@code false} otherwise
+     * Called when {@code SettingsActivity} is closed.
      */
-    private boolean checkDeviceRegistration() {
-      List<NameValuePair> params = new ArrayList<NameValuePair>();
-      params.add(new BasicNameValuePair("regId", getRegistrationId(this)));
-      String paramString = URLEncodedUtils.format(params,"utf-8");
-      
-    	HttpParams httpParameters = new BasicHttpParams();
-    	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
-    	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
-    	
-	    // Create a new HttpClient and Post Header
-	    HttpClient httpclient = new DefaultHttpClient(httpParameters);
-      HttpGet checkReg = new HttpGet("http://"+this._sharedPref.getString("pref_server_url", "")+":"+this._sharedPref.getString("pref_server_port", "")+"/gcm/checkRegistration?" + paramString);
-      try{
-      	HttpResponse response = httpclient.execute(checkReg);
-      	
-      	BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-      	StringBuilder builder = new StringBuilder();
-      	for (String line = null; (line = reader.readLine()) != null;) {
-      	    builder.append(line).append("\n");
-      	}
-      	JSONTokener tokener = new JSONTokener(builder.toString());
-      	JSONObject json_obj = new JSONObject(tokener);
-      	if(json_obj.getString("found").equals("true")){
-      		return true;
-      	}
-      	
-      } catch (ClientProtocolException e) {
-      	Log.e(TAG, e.toString());
-	    } catch (IOException e) {
-	    	Log.e(TAG, e.toString());
-	    } catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return false;
-		}
-
 		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if (requestCode == 1) {
     		if(resultCode == RESULT_OK){
@@ -464,7 +395,8 @@ public class MainActivity extends ListActivity{
     				Context context = getApplicationContext();
     				CharSequence text = "";
 						try {
-							regOk = sendRegistrationIdToBackend(regid);
+							server = new GsnServer(_sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
+							regOk = server.sendRegistrationIdToBackend(regid);
 							if(regOk){
 		  		    	text = getString(R.string.device_registered) + " " + MainActivity.this._sharedPref.getString("pref_server_url", "")+":"+MainActivity.this._sharedPref.getString("pref_server_port", "");
 							}

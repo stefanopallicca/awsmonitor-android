@@ -1,6 +1,8 @@
 package net.stefanopallicca.android.awsmonitor;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -16,13 +18,18 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -304,7 +311,7 @@ public class GsnServer implements Parcelable {
   	
     // Create a new HttpClient and Post Header
     HttpClient httpclient = new DefaultHttpClient(httpParameters);
-    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/RegisterDevice");
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/AddVsForDevice");
 
     try {
         // Add your data
@@ -357,7 +364,7 @@ public class GsnServer implements Parcelable {
     } catch (ClientProtocolException e) {
     	Log.e(TAG, e.toString());
     } catch (ConnectTimeoutException e){
-    	Log.e(TAG, e.toString());
+    	Log.e(TAG, "unregister: "+e.toString());
     	throw new HttpException("2200");
     } catch (IOException e) {
     	Log.e(TAG, e.toString());
@@ -366,5 +373,110 @@ public class GsnServer implements Parcelable {
     return true;
 	}
 	
+	
+  /**
+   * Checks against the GSN server to see whether this device is 
+   * already registered or not
+   * 
+   * @param regid Device Registration id
+   * 
+   * @return {@code true} if the application {@code regid} has already been registered on the server, {@code false} otherwise
+   * @throws ConnectTimeoutException 
+   */
+  public boolean checkDeviceRegistration(String regid) throws ConnectTimeoutException {
+    List<NameValuePair> params = new ArrayList<NameValuePair>();
+    params.add(new BasicNameValuePair("regId", regid));
+    String paramString = URLEncodedUtils.format(params,"utf-8");
+    
+  	HttpParams httpParameters = new BasicHttpParams();
+  	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+  	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
+  	
+  	try{
+	    // Create a new HttpClient and Post Header
+	    HttpClient httpclient = new DefaultHttpClient(httpParameters);
+      HttpGet checkReg = new HttpGet("http://"+this.url+":"+this.port+"/gcm/checkRegistration?" + paramString);
+    
+    	HttpResponse response = httpclient.execute(checkReg);
+    	if(response.getStatusLine().getStatusCode() == 404)
+    		return false;
+    	BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+    	StringBuilder builder = new StringBuilder();
+    	for (String line = null; (line = reader.readLine()) != null;) {
+    	    builder.append(line).append("\n");
+    	}
+    	JSONTokener tokener = new JSONTokener(builder.toString());
+    	JSONObject json_obj = new JSONObject(tokener);
+    	if(json_obj.getString("found").equals("true")){
+    		return true;
+    	}
+    	
+    } catch (ClientProtocolException e) {
+    	Log.e(TAG, e.toString());
+    } catch (ConnectTimeoutException e){
+			Log.e(TAG, "check "+e.toString());
+			throw e;
+		} catch (IOException e) {
+    	Log.e(TAG, e.toString());
+    } catch (JSONException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e){
+			Log.e(TAG, e.toString());
+		}
+		return false;
+	}
+
+	public String getURL() {
+		return this.url;
+	}
+	
+	public int getPort() {
+		return this.port;
+	}
+	
+  /**
+   * Sends the registration ID (received from GCM) to our app server, in order to register to
+   * the offered services
+   * 
+   * @param regid
+   * @return {@code true} upon successful registration, {@code false} otherwise
+   * @throws HttpException 
+   */
+  public boolean sendRegistrationIdToBackend(String regid) throws HttpException {
+  	Log.i(TAG, "Sending regid to GSN server "+this.url);
+  	
+  	HttpParams httpParameters = new BasicHttpParams();
+  	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+  	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
+  	
+    // Create a new HttpClient and Post Header
+    HttpClient httpclient = new DefaultHttpClient(httpParameters);
+    HttpPost httppost = new HttpPost("http://"+this.url+":"+this.port+"/gcm/RegisterDevice");
+
+    try {
+        // Add your data
+       	List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+        nameValuePairs.add(new BasicNameValuePair("regId", regid));
+        /*nameValuePairs.add(new BasicNameValuePair("vs_name", "lamare_batt"));
+        nameValuePairs.add(new BasicNameValuePair("field", "BATT_VOLT"));
+        nameValuePairs.add(new BasicNameValuePair("threshold", "12.65"));
+        nameValuePairs.add(new BasicNameValuePair("event", "BELOW"));*/
+        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+        // Execute HTTP Post Request
+        HttpResponse response = httpclient.execute(httppost);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if(statusCode >= 400)
+        	throw new HttpException(String.valueOf(statusCode));
+    } catch (ClientProtocolException e) {
+    	 Log.e(TAG, e.toString());
+    } catch (ConnectTimeoutException e){
+    		throw new HttpException("2200");
+    } catch (IOException e) {
+    	Log.e(TAG, e.toString());
+    	return false;
+    }
+    return true;
+  }
 	
 } // End of GsnServer class

@@ -46,7 +46,7 @@ public class GcmIntentService extends IntentService {
     public GcmIntentService() {
         super("GcmIntentService");
     }
-    public static final String TAG = "GCM Demo";
+    public static final String TAG = "awsmonitor GCM intent";
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -55,7 +55,7 @@ public class GcmIntentService extends IntentService {
         // The getMessageType() intent parameter must be the intent you received
         // in your BroadcastReceiver.
         String messageType = gcm.getMessageType(intent);
-
+        Log.i(TAG + ":onMessage extras ", extras.getString("body"));
         if (!extras.isEmpty()) {  // has effect of unparcelling Bundle
             /*
              * Filter messages based on message type. Since it is likely that GCM will be

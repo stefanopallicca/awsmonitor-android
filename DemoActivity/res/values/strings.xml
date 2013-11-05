@@ -32,8 +32,9 @@
         <item>Above</item>
         <item>Below</item>
     </string-array>
-        <string name="filter_text">Trigger notification when value is</string>
-        <string name="threshold_text">Threshold:</string>
-        <string name="save">Save</string>
+    <string name="filter_text">Trigger notification when value is</string>
+    <string name="threshold_text">Threshold:</string>
+    <string name="save">Save</string>
+    <string name="connect_timeout">Timeout connecting to</string>
 
 </resources>

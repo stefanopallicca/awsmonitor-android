@@ -44,10 +44,10 @@
            where PACKAGE is the application's package name.
     -->
     <permission
-        android:name="com.google.android.gcm.demo.app.permission.C2D_MESSAGE"
+        android:name="net.stefanopallicca.android.awsmonitor.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="com.google.android.gcm.demo.app.permission.C2D_MESSAGE" />
+    <uses-permission android:name="net.stefanopallicca.android.awsmonitor.permission.C2D_MESSAGE" />
 
     <!-- This app has permission to register and receive data message. -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
@@ -90,7 +90,7 @@
                 <!-- Receives the actual messages. -->
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
 
-                <category android:name="com.google.android.gcm.demo.app" />
+                <category android:name="net.stefanopallicca.android.awsmonitor" />
             </intent-filter>
         </receiver>
 
