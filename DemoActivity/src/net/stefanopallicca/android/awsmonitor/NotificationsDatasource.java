@@ -14,6 +14,8 @@ public class NotificationsDatasource {
   private MySQLiteHelper dbHelper;
   private String[] allColumns = { 
   		MySQLiteHelper.COLUMN_ID,
+  		MySQLiteHelper.COLUMN_URL,
+  		MySQLiteHelper.COLUMN_PORT,
       MySQLiteHelper.COLUMN_VSNAME,
       MySQLiteHelper.COLUMN_FIELDNAME,
       MySQLiteHelper.COLUMN_THRESHOLD,
@@ -32,14 +34,18 @@ public class NotificationsDatasource {
     dbHelper.close();
   }
   
-  public void addNotification(String vs_name, String field_name, Double threshold, Event event, boolean active){
+  public void addNotification(String server_url, int server_port, String vs_name, String field_name, Double threshold, Event event, boolean active){
   	ContentValues values = new ContentValues();
+  	values.put(MySQLiteHelper.COLUMN_URL, server_url);
+  	values.put(MySQLiteHelper.COLUMN_PORT, server_port);
   	values.put(MySQLiteHelper.COLUMN_VSNAME, vs_name);
   	values.put(MySQLiteHelper.COLUMN_FIELDNAME, field_name);
   	values.put(MySQLiteHelper.COLUMN_THRESHOLD, threshold);
   	values.put(MySQLiteHelper.COLUMN_EVENT, event.toString());
   	values.put(MySQLiteHelper.COLUMN_ACTIVE, active ? 1 : 0);
-  	Cursor findRow = database.query(MySQLiteHelper.TABLE_NOTIFICATIONS, allColumns, 
+  	Cursor findRow = database.query(MySQLiteHelper.TABLE_NOTIFICATIONS, allColumns,
+  			MySQLiteHelper.COLUMN_URL + " = '" + server_url + "' AND " +
+  			MySQLiteHelper.COLUMN_PORT + " = '" + server_port + "' AND " +
   			MySQLiteHelper.COLUMN_VSNAME + " = '" + vs_name + "' AND " +
   			MySQLiteHelper.COLUMN_FIELDNAME + " = '" + field_name + "'", null, null, null, null
   			);
@@ -60,9 +66,11 @@ public class NotificationsDatasource {
     return newComment;*/
   }
   
-  public VSFNotification getNotification(String vs_name, String field_name, Double threshold, Event event){
+  public VSFNotification getNotification(String server_url, int server_port, String vs_name, String field_name, Double threshold, Event event){
   	VSFNotification notification = null;
-  	Cursor findRow = database.query(MySQLiteHelper.TABLE_NOTIFICATIONS, allColumns, 
+  	Cursor findRow = database.query(MySQLiteHelper.TABLE_NOTIFICATIONS, allColumns,
+  			MySQLiteHelper.COLUMN_URL + " = '" + server_url + "' AND " +
+  			MySQLiteHelper.COLUMN_PORT + " = '" + server_port + "' AND " +
   			MySQLiteHelper.COLUMN_VSNAME + " = '" + vs_name + "' AND " +
   			MySQLiteHelper.COLUMN_FIELDNAME + " = '" + field_name + "' AND " +
   			MySQLiteHelper.COLUMN_THRESHOLD + " = '" + threshold + "' AND " +
@@ -77,13 +85,15 @@ public class NotificationsDatasource {
 	private VSFNotification cursorToVSFNotification(Cursor findRow) {
 		VSFNotification notif = null;
 		if(findRow.moveToFirst())
-			notif = new VSFNotification(findRow.getString(1), findRow.getString(2), findRow.getDouble(3), Event.valueOf(findRow.getString(4)), findRow.getInt(5));
+			notif = new VSFNotification(findRow.getString(1), findRow.getInt(2), findRow.getString(3), findRow.getString(4), findRow.getDouble(5), Event.valueOf(findRow.getString(6)), findRow.getInt(7));
 		return notif;
 	}
 
-	public VSFNotification getNotification(String vs_name, String field_name) {
+	public VSFNotification getNotification(String server_url, int server_port, String vs_name, String field_name) {
   	VSFNotification notification = null;
   	Cursor findRow = database.query(MySQLiteHelper.TABLE_NOTIFICATIONS, allColumns, 
+  			MySQLiteHelper.COLUMN_URL + " = '" + server_url + "' AND " +
+  			MySQLiteHelper.COLUMN_PORT + " = '" + server_port + "' AND " +
   			MySQLiteHelper.COLUMN_VSNAME + " = '" + vs_name + "' AND " +
   			MySQLiteHelper.COLUMN_FIELDNAME + " = '" + field_name + "'", null, null, null, null
   			);
@@ -91,5 +101,11 @@ public class NotificationsDatasource {
 	  	notification = cursorToVSFNotification(findRow);
   	}
   	return notification;
+	}
+	
+	public void RemoveNotificationsForServer(String server_url, int server_port){
+		database.delete(MySQLiteHelper.TABLE_NOTIFICATIONS,
+				MySQLiteHelper.COLUMN_URL + " = '" + server_url + "' AND " +
+				MySQLiteHelper.COLUMN_PORT + " = '" + server_port + "'", null);
 	}
 }

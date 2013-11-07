@@ -346,7 +346,7 @@ public class GsnServer implements Parcelable {
   	
     // Create a new HttpClient and Post Header
     HttpClient httpclient = new DefaultHttpClient(httpParameters);
-    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/unregister");
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/DelVsForDevice");
 
     try {
         // Add your data
@@ -478,5 +478,35 @@ public class GsnServer implements Parcelable {
     }
     return true;
   }
+
+	public void unregisterDevice(String regid) throws HttpException {
+  	HttpParams httpParameters = new BasicHttpParams();
+  	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+  	HttpConnectionParams.setSoTimeout(httpParameters, 10000);
+  	
+    // Create a new HttpClient and Post Header
+    HttpClient httpclient = new DefaultHttpClient(httpParameters);
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/unregister");
+
+    try {
+        // Add your data
+        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+        nameValuePairs.add(new BasicNameValuePair("regId", regid));
+        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+        // Execute HTTP Post Request
+        HttpResponse response = httpclient.execute(httppost);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if(statusCode >= 400)
+        	throw new HttpException(String.valueOf(statusCode));
+    } catch (ClientProtocolException e) {
+    	Log.e(TAG, e.toString());
+    } catch (ConnectTimeoutException e){
+    	Log.e(TAG, "unregister: "+e.toString());
+    	throw new HttpException("2200");
+    } catch (IOException e) {
+    	Log.e(TAG, e.toString());
+    }
+	}
 	
 } // End of GsnServer class

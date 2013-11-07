@@ -22,6 +22,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import android.R.bool;
 import android.app.Activity;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -98,7 +99,7 @@ public class MainActivity extends ListActivity{
     TextView mDisplay;
     GoogleCloudMessaging gcm;
     AtomicInteger msgId = new AtomicInteger();
-    Context context;
+    static Context context;
 
     String regid;
 
@@ -195,6 +196,19 @@ public class MainActivity extends ListActivity{
      */
     private void registerInBackground() {
     	new AsyncTask<Void, Void, String>() {
+    		
+    		ProgressDialog pd;
+    		
+    		@Override
+    		protected void onPreExecute(){
+    			pd = new ProgressDialog(MainActivity.this);
+    			pd.setTitle("Processing...");
+    			pd.setMessage("Please wait.");
+    			pd.setCancelable(false);
+    			pd.setIndeterminate(true);
+    			pd.show();
+    		}
+    		
     		@Override
         protected String doInBackground(Void... params) {
     			String msg = "";
@@ -243,6 +257,8 @@ public class MainActivity extends ListActivity{
   		    	Toast toast = Toast.makeText(context, text, duration);
   		    	toast.show();
 					}
+					pd.cancel();
+					launchMainApp();
 				}
 				}.execute(null, null, null);
     }
@@ -336,12 +352,12 @@ public class MainActivity extends ListActivity{
           regid = getRegistrationId(context);
           server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
 
-          if (regid.isEmpty()) {
+          /*if (regid.isEmpty()) {
               registerInBackground();
           }
           else {
           	Log.i(TAG, "This version has already been registered to GCM "+regid);
-          }
+          }*/
           boolean registered_to_gsnserver = false;
           try{
           	registered_to_gsnserver = server.checkDeviceRegistration(regid);
@@ -387,15 +403,16 @@ public class MainActivity extends ListActivity{
      * Called when {@code SettingsActivity} is closed.
      */
 		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+			context = getApplicationContext();
     	if (requestCode == 1) {
     		if(resultCode == RESULT_OK){
     			String regid = getRegistrationId(this);
+    			server = new GsnServer(_sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
     			if( regid != ""){
     				boolean regOk;
     				Context context = getApplicationContext();
     				CharSequence text = "";
 						try {
-							server = new GsnServer(_sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
 							regOk = server.sendRegistrationIdToBackend(regid);
 							if(regOk){
 		  		    	text = getString(R.string.device_registered) + " " + MainActivity.this._sharedPref.getString("pref_server_url", "")+":"+MainActivity.this._sharedPref.getString("pref_server_port", "");
@@ -410,9 +427,13 @@ public class MainActivity extends ListActivity{
   		    	
   		    	Toast toast = Toast.makeText(context, text, duration);
   		    	toast.show();
+  		    	
+  		    	launchMainApp();
+    			}
+    			else{
+    				registerInBackground();
     			}
     			
-    			launchMainApp();
     			
     		}
     		if (resultCode == RESULT_CANCELED) {    
@@ -428,5 +449,9 @@ public class MainActivity extends ListActivity{
 			i.putExtra("ServerParcel", server);
 			i.putExtra("vs_index", server.getVSIndexByName(vs.getName()));
 			startActivity(i);
+		}
+
+		public static Context getContext() {
+			return context;
 		}  
 }

@@ -9,6 +9,8 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
 
   public static final String TABLE_NOTIFICATIONS = "notifications";
   public static final String COLUMN_ID = "_id";
+  public static final String COLUMN_URL = "url";
+  public static final String COLUMN_PORT = "port";
   public static final String COLUMN_VSNAME = "vs_name";
   public static final String COLUMN_FIELDNAME = "field_name";
   public static final String COLUMN_THRESHOLD = "threshold";
@@ -16,12 +18,14 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
   public static final String COLUMN_ACTIVE = "active";
 
   private static final String DATABASE_NAME = "notifications.db";
-  private static final int DATABASE_VERSION = 1;
+  private static final int DATABASE_VERSION = 2;
 
   // Database creation sql statement
   private static final String DATABASE_CREATE = "create table "
       + TABLE_NOTIFICATIONS + "(" 
   		+ COLUMN_ID + " integer primary key autoincrement, "
+  		+ COLUMN_URL + " text not null, "
+  		+ COLUMN_PORT + " integer not null, "
       + COLUMN_VSNAME + " text not null, "
       + COLUMN_FIELDNAME + " text not null, "
       + COLUMN_THRESHOLD + " real not null, "

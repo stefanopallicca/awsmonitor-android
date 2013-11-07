@@ -1,6 +1,12 @@
 package net.stefanopallicca.android.awsmonitor;
 
+import java.util.Map;
+
+import org.apache.http.HttpException;
+import org.apache.http.conn.ConnectTimeoutException;
+
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -11,12 +17,24 @@ import net.stefanopallicca.android.awsmonitor.R;
 
 public class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 	
+	private SharedPreferences oldPrefs;
+	private String oldServerURL;
+	private String oldServerPort;
+	Context context;
+	
 	private static final String TAG = "Settings Activity";
     @SuppressWarnings("deprecation")
 		@Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.preferences);
+    	context = this;
+      super.onCreate(savedInstanceState);
+      Log.i("Settings", "CREATE");
+      //oldPrefs = getSharedPreferences(MainActivity.class.getSimpleName(),
+        //  Context.MODE_PRIVATE);
+      oldPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+      oldServerURL = oldPrefs.getString("pref_server_url", "");
+      oldServerPort = oldPrefs.getString("pref_server_port", "");
+      addPreferencesFromResource(R.xml.preferences);
         
     }
     
@@ -33,9 +51,32 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences prefs, String pref) {
 			Intent resultIntent = new Intent();
+			
+			String regid = getSharedPreferences(MainActivity.class.getSimpleName(),
+            Context.MODE_PRIVATE).getString(MainActivity.PROPERTY_REG_ID, "");
+			
+  		String server_url = prefs.getString("pref_server_url", "");
+  		String server_port = prefs.getString("pref_server_port", "");
+  		
+  		if(!oldServerURL.equals(server_url)){
+  			
+  			GsnServer oldServer = new GsnServer(oldServerURL, Integer.valueOf(oldServerPort));
+  			try {
+					if(!regid.equals("") && oldServer.checkDeviceRegistration(regid)){
+						Log.i("SETTINGS", "Unregistering device");
+						oldServer.unregisterDevice(regid);
+						Log.i("SETTINGS", "Deleting previous preferences from local DB");
+						NotificationsDatasource nd = new NotificationsDatasource(context);
+						nd.open();
+						nd.RemoveNotificationsForServer(oldServerURL, Integer.valueOf(oldServerPort));
+					}
+				} catch (ConnectTimeoutException e) {
+					
+				} catch (HttpException e) {
+					
+				}
+  		}
     	if(pref.equals("pref_server_url") || pref.equals("pref_server_port")){
-    		String server_url = prefs.getString("pref_server_url", "");
-    		String server_port = prefs.getString("pref_server_port", "");
     		if(server_port.equals("")){
     			Log.i(TAG, "PORT EMPTY");
     			prefs.edit().putString("pref_server_port", "22001").commit();
