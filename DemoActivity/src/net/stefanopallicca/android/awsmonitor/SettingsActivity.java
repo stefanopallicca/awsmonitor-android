@@ -58,7 +58,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
   		String server_url = prefs.getString("pref_server_url", "");
   		String server_port = prefs.getString("pref_server_port", "");
   		
-  		if(!oldServerURL.equals(server_url)){
+  		if(!oldServerURL.equals(server_url) && !oldServerURL.equals("")){
   			
   			GsnServer oldServer = new GsnServer(oldServerURL, Integer.valueOf(oldServerPort));
   			try {

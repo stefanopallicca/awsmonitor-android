@@ -64,7 +64,7 @@ public class VSFieldActivity extends Activity {
 		spinner.setAdapter(adapter);
 		onCheckboxClicked(findViewById(R.id.checkbox_notification));
 		
-		VSFNotification notif = datasource.getNotification(server.getURL(), server.getPort(), vs.getName(), field.getName());
+		VSFNotification notif = datasource.getNotification(server.getNotificationUrl(), server.getNotificationPort(), vs.getName(), field.getName());
 		if(notif != null){
 			Log.i("INFO", notif.getThreshold().toString());
 			((EditText) findViewById(R.id.text_threshold)).setText(notif.getThreshold().toString());

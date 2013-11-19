@@ -351,7 +351,7 @@ public class MainActivity extends ListActivity{
           gcm = GoogleCloudMessaging.getInstance(this);
           regid = getRegistrationId(context);
           server = new GsnServer( _sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
-
+          server.getSummary();
           /*if (regid.isEmpty()) {
               registerInBackground();
           }
@@ -377,7 +377,7 @@ public class MainActivity extends ListActivity{
           if(!regid.isEmpty() && registered_to_gsnserver){
           	Log.i(TAG, "This device has been registered to GSN server");
           	//mDisplay.append("Device ready to receive notifications from GSN server " + _sharedPref.getString("pref_server_url", ""));
-          	server.getSummary();
+          	
             setContentView(R.layout.main);
             ListView listView = getListView();
             mDisplay = (TextView) findViewById(R.id.main_header);
@@ -408,6 +408,7 @@ public class MainActivity extends ListActivity{
     		if(resultCode == RESULT_OK){
     			String regid = getRegistrationId(this);
     			server = new GsnServer(_sharedPref.getString("pref_server_url", ""),  Integer.parseInt(_sharedPref.getString("pref_server_port", "")));
+    			server.getSummary();
     			if( regid != ""){
     				boolean regOk;
     				Context context = getApplicationContext();
