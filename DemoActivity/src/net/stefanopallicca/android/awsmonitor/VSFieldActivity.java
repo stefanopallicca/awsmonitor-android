@@ -50,7 +50,7 @@ public class VSFieldActivity extends Activity {
   	int field_index = intent.getIntExtra("field_index", -1);
   	vs = server.virtualSensors.get(vs_index);
   	field = vs.fields.get(field_index);
-  	setTitle(vs.getName()+" » "+field.getName());
+  	setTitle(vs.getName()+" - "+field.getName());
 		setContentView(R.layout.activity_vsfield);
 		// Show the Up button in the action bar.
 		//setupActionBar();
@@ -64,7 +64,7 @@ public class VSFieldActivity extends Activity {
 		spinner.setAdapter(adapter);
 		onCheckboxClicked(findViewById(R.id.checkbox_notification));
 		
-		VSFNotification notif = datasource.getNotification(server.getNotificationUrl(), server.getNotificationPort(), vs.getName(), field.getName());
+		VSFNotification notif = datasource.getNotification(server.getURL(), server.getPort(), vs.getName(), field.getName());
 		if(notif != null){
 			Log.i("INFO", notif.getThreshold().toString());
 			((EditText) findViewById(R.id.text_threshold)).setText(notif.getThreshold().toString());
@@ -115,11 +115,10 @@ public class VSFieldActivity extends Activity {
     // Is the view now checked?
     boolean checked = ((CheckBox) view).isChecked();
     
-		switch(view.getId()){
-			case R.id.checkbox_notification:
-				findViewById(R.id.filter_spinner).setEnabled(checked);
-				findViewById(R.id.text_threshold).setEnabled(checked);
-				break;
+		int id = view.getId();
+		if (id == R.id.checkbox_notification) {
+			findViewById(R.id.filter_spinner).setEnabled(checked);
+			findViewById(R.id.text_threshold).setEnabled(checked);
 		}
 	}
 	

@@ -28,9 +28,6 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     public void onCreate(Bundle savedInstanceState) {
     	context = this;
       super.onCreate(savedInstanceState);
-      Log.i("Settings", "CREATE");
-      //oldPrefs = getSharedPreferences(MainActivity.class.getSimpleName(),
-        //  Context.MODE_PRIVATE);
       oldPrefs = PreferenceManager.getDefaultSharedPreferences(this);
       oldServerURL = oldPrefs.getString("pref_server_url", "");
       oldServerPort = oldPrefs.getString("pref_server_port", "");
@@ -58,7 +55,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
   		String server_url = prefs.getString("pref_server_url", "");
   		String server_port = prefs.getString("pref_server_port", "");
   		
-  		if(!oldServerURL.equals(server_url) && !oldServerURL.equals("")){
+  		if(!oldServerURL.equals(server_url) && oldServerPort.length() > 0){
   			
   			GsnServer oldServer = new GsnServer(oldServerURL, Integer.valueOf(oldServerPort));
   			try {

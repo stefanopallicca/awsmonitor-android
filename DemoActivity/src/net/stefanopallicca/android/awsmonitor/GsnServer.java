@@ -42,9 +42,6 @@ public class GsnServer implements Parcelable {
 	private String url = "";
 	private int port = 22001;
 	
-	private String notificationUrl = "";
-	private int notificationPort = 22001;
-	
 	private String name = "";
 	public ArrayList<VirtualSensor> virtualSensors = new ArrayList<VirtualSensor>();
 	
@@ -66,7 +63,6 @@ public class GsnServer implements Parcelable {
 	}
 
 	public void getSummary(){
-		Log.i(TAG, "Getting server summary of: "+this.url+":"+this.port);
 		try {
 			URL url = new URL("http://"+this.url+":"+this.port+"/gsn");
 			URLConnection conn = url.openConnection();
@@ -77,14 +73,6 @@ public class GsnServer implements Parcelable {
 			
 			Element gsn = (Element) doc.getElementsByTagName("gsn").item(0);
 			this.name = gsn.getAttribute("name");
-			
-			Element notURL = (Element) doc.getElementsByTagName("notification-url").item(0);
-			//if(notURL != null)
-				this.notificationUrl = notURL.getTextContent();
-			
-			Element notPort = (Element) doc.getElementsByTagName("notification-port").item(0);
-			//if(notURL != null)
-				this.notificationPort = Integer.parseInt(notPort.getTextContent());
 
 			NodeList nodes = doc.getElementsByTagName("virtual-sensor");
 			for (int i = 0; i < nodes.getLength(); i++) {
@@ -323,13 +311,11 @@ public class GsnServer implements Parcelable {
   	
     // Create a new HttpClient and Post Header
     HttpClient httpclient = new DefaultHttpClient(httpParameters);
-    HttpPost httppost = new HttpPost("http://"+notificationUrl+":"+notificationPort+"/gcm/AddVsForDevice");
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/AddVsForDevice");
 
     try {
         // Add your data
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-        nameValuePairs.add(new BasicNameValuePair("remote_url", url));
-        nameValuePairs.add(new BasicNameValuePair("remote_port", Integer.valueOf(port).toString()));
         nameValuePairs.add(new BasicNameValuePair("regId", regid));
         nameValuePairs.add(new BasicNameValuePair("vs_name", vs_name));
         nameValuePairs.add(new BasicNameValuePair("field", field_name));
@@ -360,7 +346,7 @@ public class GsnServer implements Parcelable {
   	
     // Create a new HttpClient and Post Header
     HttpClient httpclient = new DefaultHttpClient(httpParameters);
-    HttpPost httppost = new HttpPost("http://"+notificationUrl+":"+notificationPort+"/gcm/DelVsForDevice");
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/DelVsForDevice");
 
     try {
         // Add your data
@@ -409,7 +395,7 @@ public class GsnServer implements Parcelable {
   	try{
 	    // Create a new HttpClient and Post Header
 	    HttpClient httpclient = new DefaultHttpClient(httpParameters);
-      HttpGet checkReg = new HttpGet("http://"+this.notificationUrl+":"+this.notificationPort+"/gcm/checkRegistration?" + paramString);
+      HttpGet checkReg = new HttpGet("http://"+this.url+":"+this.port+"/gcm/checkRegistration?" + paramString);
     
     	HttpResponse response = httpclient.execute(checkReg);
     	if(response.getStatusLine().getStatusCode() == 404)
@@ -457,7 +443,7 @@ public class GsnServer implements Parcelable {
    * @throws HttpException 
    */
   public boolean sendRegistrationIdToBackend(String regid) throws HttpException {
-  	Log.i(TAG, "Sending regid to GSN server "+this.name);
+  	Log.i(TAG, "Sending regid to GSN server "+this.url);
   	
   	HttpParams httpParameters = new BasicHttpParams();
   	HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
@@ -465,7 +451,7 @@ public class GsnServer implements Parcelable {
   	
     // Create a new HttpClient and Post Header
     HttpClient httpclient = new DefaultHttpClient(httpParameters);
-    HttpPost httppost = new HttpPost("http://"+this.notificationUrl+":"+this.notificationPort+"/gcm/RegisterDevice");
+    HttpPost httppost = new HttpPost("http://"+this.url+":"+this.port+"/gcm/RegisterDevice");
 
     try {
         // Add your data
@@ -500,7 +486,7 @@ public class GsnServer implements Parcelable {
   	
     // Create a new HttpClient and Post Header
     HttpClient httpclient = new DefaultHttpClient(httpParameters);
-    HttpPost httppost = new HttpPost("http://"+this.notificationUrl+":"+this.notificationPort+"/gcm/unregister");
+    HttpPost httppost = new HttpPost("http://"+url+":"+port+"/gcm/unregister");
 
     try {
         // Add your data
@@ -521,14 +507,6 @@ public class GsnServer implements Parcelable {
     } catch (IOException e) {
     	Log.e(TAG, e.toString());
     }
-	}
-	
-	public String getNotificationUrl(){
-		return notificationUrl;
-	}
-	
-	public int getNotificationPort(){
-		return notificationPort;
 	}
 	
 } // End of GsnServer class
