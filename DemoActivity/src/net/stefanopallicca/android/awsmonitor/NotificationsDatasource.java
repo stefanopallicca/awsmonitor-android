@@ -12,6 +12,7 @@ public class NotificationsDatasource {
   // Database fields
   private SQLiteDatabase database;
   private MySQLiteHelper dbHelper;
+  
   private String[] allColumns = { 
   		MySQLiteHelper.COLUMN_ID,
   		MySQLiteHelper.COLUMN_URL,
@@ -23,15 +24,18 @@ public class NotificationsDatasource {
       MySQLiteHelper.COLUMN_ACTIVE};
 
   public NotificationsDatasource(Context context) {
-    dbHelper = new MySQLiteHelper(context);
+  	// Trick to have only one copy of the DB open at any time.
+  	dbHelper = dbHelper.getInstance(context);
   }
 
-  public void open() throws SQLException {
-    database = dbHelper.getWritableDatabase();
+  public synchronized SQLiteDatabase open() {
+	  	if(database == null)
+	  		database = dbHelper.getWritableDatabase();
+	  	return database;
   }
 
-  public void close() {
-    dbHelper.close();
+  public synchronized void close() {
+    // do nothing
   }
   
   public void addNotification(String server_url, int server_port, String vs_name, String field_name, Double threshold, Event event, boolean active){

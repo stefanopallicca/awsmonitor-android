@@ -17,9 +17,11 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
   public static final String COLUMN_EVENT = "event";
   public static final String COLUMN_ACTIVE = "active";
 
-  private static final String DATABASE_NAME = "notifications.db";
-  private static final int DATABASE_VERSION = 2;
-
+  public static final String DATABASE_NAME = "notifications.db";
+  public static final int DATABASE_VERSION = 2;
+  
+  private static MySQLiteHelper sInstance;
+  
   // Database creation sql statement
   private static final String DATABASE_CREATE = "create table "
       + TABLE_NOTIFICATIONS + "(" 
@@ -31,10 +33,29 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
       + COLUMN_THRESHOLD + " real not null, "
       + COLUMN_EVENT + " text not null, "
       + COLUMN_ACTIVE + " integer not null);";
+  
+  public static MySQLiteHelper getInstance(Context context) {
 
-  public MySQLiteHelper(Context context) {
+    // Use the application context, which will ensure that you 
+    // don't accidentally leak an Activity's context.
+    // See this article for more information: http://bit.ly/6LRzfx
+    if (sInstance == null) {
+      sInstance = new MySQLiteHelper(context.getApplicationContext());
+    }
+    return sInstance;
+  }
+
+  /**
+   * Constructor should be private to prevent direct instantiation.
+   * make call to static factory method "getInstance()" instead.
+   */
+  private MySQLiteHelper(Context context) {
     super(context, DATABASE_NAME, null, DATABASE_VERSION);
   }
+  
+  /*public MySQLiteHelper(Context context) {
+    super(context, DATABASE_NAME, null, DATABASE_VERSION);
+  }*/
 
   @Override
   public void onCreate(SQLiteDatabase database) {

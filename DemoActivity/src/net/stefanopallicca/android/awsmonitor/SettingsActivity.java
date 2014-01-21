@@ -63,7 +63,8 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 						Log.i("SETTINGS", "Unregistering device");
 						oldServer.unregisterDevice(regid);
 						Log.i("SETTINGS", "Deleting previous preferences from local DB");
-						NotificationsDatasource nd = new NotificationsDatasource(context);
+						NotificationsDatasource nd = new NotificationsDatasource(context.getApplicationContext());
+						//NotificationsDatasource nd = NotificationsDatasource.getInstance(context);
 						nd.open();
 						nd.RemoveNotificationsForServer(oldServerURL, Integer.valueOf(oldServerPort));
 					}

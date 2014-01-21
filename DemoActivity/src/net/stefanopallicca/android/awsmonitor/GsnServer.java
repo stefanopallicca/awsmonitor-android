@@ -61,7 +61,10 @@ public class GsnServer implements Parcelable {
 		virtualSensors = new ArrayList<VirtualSensor>();
     in.readList(virtualSensors, getClass().getClassLoader());
 	}
-
+	
+	/*
+	 * Connects to GSN server, reads parameters from its XML representation and populates instance virtual sensors.
+	 */
 	public void getSummary(){
 		try {
 			URL url = new URL("http://"+this.url+":"+this.port+"/gsn");
