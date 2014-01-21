@@ -80,7 +80,7 @@ public class MainActivity extends ListActivity{
     public static final String EXTRA_MESSAGE = "message";
     public static final String PROPERTY_REG_ID = "registration_id";
     private static final String PROPERTY_APP_VERSION = "0.4";
-    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000; // Needed to check google play services
     protected SharedPreferences _sharedPref;
     //private static final String GSN_URL = "http://stefanopallicca.net:22001";
     
@@ -346,7 +346,10 @@ public class MainActivity extends ListActivity{
       
       context = getApplicationContext();
 
-      // Check device for Play Services APK. If check succeeds, proceed with GCM registration.
+      /* 
+       * Check device for Play Services APK. 
+       * If check succeeds, proceed with GSN server registration and download available virtual sensors.
+       */
       if (checkPlayServices()) {
           gcm = GoogleCloudMessaging.getInstance(this);
           regid = getRegistrationId(context);
@@ -384,7 +387,8 @@ public class MainActivity extends ListActivity{
             mDisplay.append(server.getName());
             List<VirtualSensor> list = new LinkedList<VirtualSensor>();
             for(int i = 0; i < server.virtualSensors.size(); i++){
-            	if(server.virtualSensors.get(i).getNumFields() > 0)
+              // only add virtual sensors with fields to list (skip app-generated virtual sensors)
+            	if(server.virtualSensors.get(i).getNumFields() > 0) 
             		list.add(server.virtualSensors.get(i));
             }
             VirtualSensorListAdapter adapter = new VirtualSensorListAdapter(this, R.layout.vs_row, list);
