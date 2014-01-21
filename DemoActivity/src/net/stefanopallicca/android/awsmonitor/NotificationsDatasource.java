@@ -25,7 +25,7 @@ public class NotificationsDatasource {
 
   public NotificationsDatasource(Context context) {
   	// Trick to have only one copy of the DB open at any time.
-  	dbHelper = dbHelper.getInstance(context);
+  	dbHelper = MySQLiteHelper.getInstance(context);
   }
 
   public synchronized SQLiteDatabase open() {
