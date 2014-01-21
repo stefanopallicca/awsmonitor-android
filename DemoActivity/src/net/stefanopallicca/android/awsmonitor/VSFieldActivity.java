@@ -41,7 +41,7 @@ public class VSFieldActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		context = this;
-		datasource = new NotificationsDatasource(this);
+		datasource = new NotificationsDatasource(context.getApplicationContext());
     datasource.open();
     
 		Intent intent = getIntent();
