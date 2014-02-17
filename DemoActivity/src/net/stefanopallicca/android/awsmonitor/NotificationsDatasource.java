@@ -123,7 +123,6 @@ public class NotificationsDatasource {
 	public void dbAddNotification(String body){
 		ContentValues values = new ContentValues();
 		int now = (int) (new Date().getTime()/1000);
-		Log.i("NOTDATA", Integer.toString(now));
   	values.put(MySQLiteHelper.RECV_COLUMN_RECV_TIME, now);
   	values.put(MySQLiteHelper.RECV_COLUMN_BODY, body);
 		long insertId = database.insert(MySQLiteHelper.TABLE_RECEIVED, null, values); 
