@@ -20,6 +20,15 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
   public static final String DATABASE_NAME = "notifications.db";
   public static final int DATABASE_VERSION = 2;
   
+  
+  public static final String TABLE_RECEIVED = "recv_notif"; // received notifications table
+  public static final String RECV_COLUMN_ID = "notification_id";
+  public static final String RECV_COLUMN_RECV_TIME = "recv_time";
+  public static final String RECV_COLUMN_BODY = "body";
+  public static final String RECV_CREATE = "create table " + TABLE_RECEIVED + "("
+  		+ RECV_COLUMN_ID + " integer primary key autoincrement, "
+  		+ RECV_COLUMN_RECV_TIME + " integer not null, "
+  		+ RECV_COLUMN_BODY + " text not null);";
   private static MySQLiteHelper sInstance;
   
   // Database creation sql statement
@@ -60,6 +69,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
   @Override
   public void onCreate(SQLiteDatabase database) {
     database.execSQL(DATABASE_CREATE);
+    database.execSQL(RECV_CREATE);
   }
 
   @Override
@@ -68,6 +78,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         "Upgrading database from version " + oldVersion + " to "
             + newVersion + ", which will destroy all old data");
     db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
+    db.execSQL("DROP TABLE IF EXISTS " + TABLE_RECEIVED);
     onCreate(db);
   }
 

@@ -1,5 +1,7 @@
 package net.stefanopallicca.android.awsmonitor;
 
+import java.util.Date;
+
 import net.stefanopallicca.android.awsmonitor.GsnServer.Event;
 import android.content.ContentValues;
 import android.content.Context;
@@ -111,5 +113,19 @@ public class NotificationsDatasource {
 		database.delete(MySQLiteHelper.TABLE_NOTIFICATIONS,
 				MySQLiteHelper.COLUMN_URL + " = '" + server_url + "' AND " +
 				MySQLiteHelper.COLUMN_PORT + " = '" + server_port + "'", null);
+	}
+	
+	/**
+	 * Inserts a new notification in the db of received notifications
+	 * 
+	 * @param body
+	 */
+	public void dbAddNotification(String body){
+		ContentValues values = new ContentValues();
+		int now = (int) (new Date().getTime()/1000);
+		Log.i("NOTDATA", Integer.toString(now));
+  	values.put(MySQLiteHelper.RECV_COLUMN_RECV_TIME, now);
+  	values.put(MySQLiteHelper.RECV_COLUMN_BODY, body);
+		long insertId = database.insert(MySQLiteHelper.TABLE_RECEIVED, null, values); 
 	}
 }

@@ -81,6 +81,10 @@ public class GcmIntentService extends IntentService {
                 // Post notification of received message.
                 String messageBody = extras.getString("body");
                 //sendNotification("Received: " + extras.toString());
+                NotificationsDatasource nd = new NotificationsDatasource(getApplicationContext());
+                nd.open();
+                //String messageBody = (String) intent.getExtras().getCharSequence("body"); 
+                nd.dbAddNotification(messageBody);
                 // Invia messaggio
                 sendNotification(messageBody);
                 Log.i(TAG, "Received: " + extras.toString());
