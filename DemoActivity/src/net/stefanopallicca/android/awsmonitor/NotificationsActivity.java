@@ -1,21 +1,35 @@
 package net.stefanopallicca.android.awsmonitor;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.ListActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 import android.support.v4.app.NavUtils;
 import android.annotation.TargetApi;
 import android.os.Build;
 
-public class NotificationsActivity extends Activity {
+public class NotificationsActivity extends ListActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_notifications);
 		// Show the Up button in the action bar.
-		setupActionBar();
+		//setupActionBar();
+		List<String> list = new LinkedList<String>();
+		NotificationsDatasource nd = new NotificationsDatasource(getApplicationContext());
+		nd.open();
+		list = nd.getDbNotifications();
+		Log.i("LIST", list.get(0));
+	  	NotificationsListAdapter nl_adapter = new NotificationsListAdapter(this, R.layout.notification_row, list);
+	  	ListView listView = getListView();
+	  	listView.setAdapter(nl_adapter);
 	}
 
 	/**

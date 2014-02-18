@@ -1,13 +1,17 @@
 package net.stefanopallicca.android.awsmonitor;
 
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.stefanopallicca.android.awsmonitor.GsnServer.Event;
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.SyncStateContract.Columns;
 import android.util.Log;
 
 public class NotificationsDatasource {
@@ -126,5 +130,22 @@ public class NotificationsDatasource {
   	values.put(MySQLiteHelper.RECV_COLUMN_RECV_TIME, now);
   	values.put(MySQLiteHelper.RECV_COLUMN_BODY, body);
 		long insertId = database.insert(MySQLiteHelper.TABLE_RECEIVED, null, values); 
+	}
+	
+	@SuppressLint("NewApi")
+	public LinkedList<String> getDbNotifications(){
+		String[] columns = new String[1];
+		columns[0] = MySQLiteHelper.RECV_COLUMN_BODY;
+		Cursor findRows = database.query(MySQLiteHelper.TABLE_RECEIVED, columns, null, null, null, null, 
+				MySQLiteHelper.RECV_COLUMN_RECV_TIME + " DESC");
+		LinkedList<String> list = new LinkedList<String>();
+		if(findRows != null && findRows.moveToFirst()){
+			do{
+				list.add(findRows.getString(0));
+				findRows.moveToNext();
+			}
+			while(!findRows.isLast());
+		}
+		return list;
 	}
 }
