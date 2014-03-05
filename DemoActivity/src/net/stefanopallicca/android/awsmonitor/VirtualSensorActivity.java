@@ -28,7 +28,7 @@ public class VirtualSensorActivity extends ListActivity {
   	setTitle(server.virtualSensors.get(vs_index).getName());
   	List<VSField> list = new LinkedList<GsnServer.VirtualSensor.VSField>();
   	String[] skipfields = new String[]{"altitude", "geographical", 
-  			"latitude", "longitude", "name", "record", "timed"}; // may add more, but values MUST BE in alphabetical order
+  			"latitude", "longitude", "name", "record", "time", "timed"}; // may add more, but values MUST BE in alphabetical order
   	VSField field = null;
   	for(int i = 0; i < vs.getNumFields(); i++){
   		field = vs.fields.get(i);
